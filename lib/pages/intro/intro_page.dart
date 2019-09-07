@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:ripple_color_selection/controller/color_selection_controller.dart';
 import 'package:ripple_color_selection/ripple_color_selection.dart';
 
+import 'course_selection.dart';
+
 
 
 class IntroPage extends StatefulWidget {
@@ -19,36 +21,68 @@ class _IntroPageState extends State<IntroPage> {
   static final List<Widget> _pages = [
 
     RippleColorSelection(
+      rippleExpandDuration: const Duration(milliseconds: 3000),
       controller: _colorSelectionController,
     ),
-    _CourseSelectionPage()
+    CourseSelectionPage()
   ];
+
+  /// This list will hold information if the specific page n is valid => The needed values were selected
+  final List<bool> isPageValid = List.generate(_pages.length, (index) => false);
+
+  @override
+  void initState() {
+
+    _colorSelectionController.addListener(() {
+      setState(() {
+        isPageValid.insert(0, true);
+      });
+    });
+
+    super.initState();
+  }
+
+  Future<bool> willPop() async {
+    if(_currentPage == 0)
+      return true;
+
+    setState(() {
+      _currentPage--;
+    });
+
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-          child: Column(
-        children: <Widget>[
-          Flexible(
+    return WillPopScope(
+      onWillPop: willPop,
+      child: Scaffold(
+        body: SafeArea(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               reverseDuration: Duration(milliseconds: 200),
               child: _pages.elementAt(_currentPage),
             ),
-          ),
-          Flexible(
+        ),
+        bottomNavigationBar: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: 100.0),
+          child: Container(
+            color: Theme.of(context).backgroundColor,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
-                RaisedButton(
+                _currentPage == 0 ? Container() : RaisedButton(
                   onPressed: () {
-                    _currentPage--;
+                    setState(() {
+                      _currentPage--;
+                    });
                   },
                   child: Text("Prev"),
                 ),
                 RaisedButton(
-                  onPressed: () {
+                  onPressed: !isPageValid.elementAt(_currentPage) ? null : () {
                     setState(() {
                       _currentPage++;
                     });
@@ -58,36 +92,6 @@ class _IntroPageState extends State<IntroPage> {
               ],
             ),
           ),
-        ],
-      )),
-    );
-  }
-}
-
-// TODO: Seperate into widget
-class _CourseSelectionPage extends StatefulWidget {
-  @override
-  __CourseSelectionPageState createState() => __CourseSelectionPageState();
-}
-
-class __CourseSelectionPageState extends State<_CourseSelectionPage> {
-  TextEditingController _textEditingController;
-
-  @override
-  void initState() {
-    _textEditingController = new TextEditingController();
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: Center(
-        child: TextField(
-          controller: _textEditingController,
-          autofocus: true,
-          keyboardType:
-              TextInputType.numberWithOptions(signed: false, decimal: true),
         ),
       ),
     );
