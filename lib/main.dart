@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kuna/pages/intro_page.dart';
+import 'package:kuna/pages/intro/intro_page.dart';
 import 'package:kuna/pages/my_home_page.dart';
 import 'package:kuna/provider/calculator_provider.dart';
 import 'package:kuna/provider/page_provider.dart';
