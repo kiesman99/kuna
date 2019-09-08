@@ -1,12 +1,10 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:ripple_color_selection/controller/color_selection_controller.dart';
-import 'package:ripple_color_selection/ripple_color_selection.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
+import 'package:kuna/pages/my_home_page.dart';
+import 'package:number_slide_animation/number_slide_animation.dart';
 
-import 'course_selection.dart';
-
-
+import '../../styles.dart';
 
 class IntroPage extends StatefulWidget {
   @override
@@ -14,86 +12,165 @@ class IntroPage extends StatefulWidget {
 }
 
 class _IntroPageState extends State<IntroPage> {
-  static final ColorSelectionController _colorSelectionController =
-      new ColorSelectionController();
 
-  int _currentPage = 0;
-  static final List<Widget> _pages = [
+  bool _showFAB = false;
+  TextEditingController _textEditingController;
+  final _formKey = new GlobalKey<FormState>();
 
-    RippleColorSelection(
-      rippleExpandDuration: const Duration(milliseconds: 3000),
-      controller: _colorSelectionController,
-    ),
-    CourseSelectionPage()
-  ];
+  Future<void> _infoModal() async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context){
+        return AlertDialog(
+          title: Row(
+            children: <Widget>[
+              Text("Info - "),
+              NumberSlideAnimation(
+                number: "213576",
+                textStyle: Theme.of(context).textTheme.title,
+                duration: Duration(seconds: 2),
+                curve: Curves.easeInCubic,
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Text("Hey!\n\n"
+                "Danke, dass du Kuna verwendest um den Überblick bei Währungsrechnungen im Urlaub zu behalten!\n"
+                "Damit du starten kannst musst du den Kurs angeben, zu dem du dein Geld gewächselt hast.\n\n"
+                "Du kannst den Kurs jederzeit in den Einstellungen ändern."),
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("Okay!"),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        );
+      }
+    );
+  }
 
-  /// This list will hold information if the specific page n is valid => The needed values were selected
-  final List<bool> isPageValid = List.generate(_pages.length, (index) => false);
+  Future<void> _helpDialog(){
+    return showDialog(context: context,
+      barrierDismissible: true,
+      builder: (context){
+        return AlertDialog(
+          title: Text("Hilfe"),
+          content: SingleChildScrollView(
+            child: Text("Der Wechselkurs zeigt dir, wieviel Geld in Fremdwährung du für eine Einheit deiner Währung bekommst.\n\n"
+            "Wenn du beispielsweise für einen Euro (deine Währung) vier US-Dollar (Fremdwährung) bekommst, währe dein Wechselkurs: 4.\n\n"
+                "Bekommst du für einen Euro (deine Währung ) 0,5 US-Dollar (Fremdwährung), wäre dein Wechselkurs: 0,5"),
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("Okay"),
+              onPressed: () => Navigator.of(context).pop(),
+            )
+          ],
+        );
+      }
+    );
+  }
 
   @override
   void initState() {
+    _textEditingController = new TextEditingController();
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async{
+      await _infoModal();
+    });
 
-    _colorSelectionController.addListener(() {
+    _textEditingController.addListener(() {
       setState(() {
-        isPageValid.insert(0, true);
+       _showFAB = _textEditingController.text.isNotEmpty;
       });
     });
-
-    super.initState();
   }
 
-  Future<bool> willPop() async {
-    if(_currentPage == 0)
-      return true;
+  String _validateTextField(String value){
+    print("VALIDATE");
+    if(value.isEmpty) {
+      return "Bitte gebe einen Wechselkurs ein";
+    }
 
-    setState(() {
-      _currentPage--;
-    });
-
-    return false;
+    if(num.tryParse(value) == null){
+      return "$value ist keine gültige Nummer";
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: willPop,
-      child: Scaffold(
-        body: SafeArea(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              reverseDuration: Duration(milliseconds: 200),
-              child: _pages.elementAt(_currentPage),
-            ),
-        ),
-        bottomNavigationBar: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: 100.0),
-          child: Container(
-            color: Theme.of(context).backgroundColor,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                _currentPage == 0 ? Container() : RaisedButton(
-                  onPressed: () {
-                    setState(() {
-                      _currentPage--;
-                    });
-                  },
-                  child: Text("Prev"),
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text("Dein Wechselkurs:", style: Styles.introPageHeader),
+              SizedBox(
+                height: 50.0,
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 35.0
                 ),
-                RaisedButton(
-                  onPressed: !isPageValid.elementAt(_currentPage) ? null : () {
-                    setState(() {
-                      _currentPage++;
-                    });
-                  },
-                  child: Text("Next"),
+                child: Column(
+                  children: <Widget>[
+                    Form(
+                      key: _formKey,
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                            icon: Icon(Icons.euro_symbol),
+                            hasFloatingPlaceholder: true,
+                            labelText: "Wechselkurs",
+                            border: OutlineInputBorder()
+                        ),
+                        keyboardType: TextInputType.number,
+                        controller: _textEditingController,
+                        validator: _validateTextField
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        FlatButton(
+                          child: Text("Was ist der Wechselkurs?", style: TextStyle(color: Theme.of(context).primaryColor)),
+                          onPressed: () => _helpDialog(),
+                        )
+                      ],
+                    )
+                  ],
                 )
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: AnimatedSwitcher(
+        child: _showFAB ?
+        FloatingActionButton(
+          child: Icon(Icons.check),
+          onPressed: () => _nextPage(),
+        ) : null,
+        duration: const Duration(milliseconds: 200),
+        transitionBuilder: (child, animation){
+          return ScaleTransition(
+            scale: animation,
+            child: child,
+          );
+        },
+      )
     );
+  }
+
+  void _nextPage(){
+    if(_formKey.currentState.validate()){
+      // TODO: save value to DB
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MyHomePage()));
+    }
   }
 }
