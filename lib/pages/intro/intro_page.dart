@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:hive/hive.dart';
 import 'package:kuna/pages/my_home_page.dart';
 import 'package:number_slide_animation/number_slide_animation.dart';
 
@@ -169,7 +170,7 @@ class _IntroPageState extends State<IntroPage> {
 
   void _nextPage(){
     if(_formKey.currentState.validate()){
-      // TODO: save value to DB
+      Hive.box('settings').put("course", num.tryParse(_textEditingController.text));
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MyHomePage()));
     }
   }
