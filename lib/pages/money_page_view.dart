@@ -1,20 +1,125 @@
 import 'package:flutter/material.dart';
 import 'package:kuna/provider/shared_pref_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+
+import '../styles.dart';
 
 class MoneyPageView extends StatefulWidget {
-  PageController pageController;
+  final PageController pageController;
 
-  MoneyPageView({@required this.pageController});
+  final GlobalKey fabKey;
+  final GlobalKey settingsKey;
+
+  MoneyPageView({
+    @required this.pageController,
+    @required this.fabKey,
+    @required this.settingsKey
+  });
 
   @override
   _MoneyPageViewState createState() => _MoneyPageViewState();
 }
 
 class _MoneyPageViewState extends State<MoneyPageView> {
+
+  // keys
+  GlobalKey _tileKey = new GlobalKey();
+
   int itemsToShow = 2000;
 
-  double get course => Provider.of<SharedPrefProvider>(context).course;
+  SettingsProvider get _settingsProvider => Provider.of<SettingsProvider>(context);
+
+  double get course => _settingsProvider.course;
+
+  List<TargetFocus> _tutorialTargets = List();
+
+  void _showTutorial() {
+    TutorialCoachMark(
+      context,
+      textSkip: "Überspringen",
+      targets: _tutorialTargets,
+      colorShadow: Color(_settingsProvider.primaryColor),
+      finish: () => _settingsProvider.tutorialWatched = true,
+      clickSkip: () => _settingsProvider.tutorialWatched = true,
+      alignSkip: Alignment.bottomLeft
+    )..show();
+  }
+
+  void _initTargets(){
+
+    _tutorialTargets.add(
+      TargetFocus(
+        identify: "Target 1",
+        keyTarget: _tileKey,
+        contents: [
+          ContentTarget(
+            align: AlignContent.bottom,
+            child: Container(
+              child: Column(
+                children: <Widget>[
+                  Text("Hier siehst du eine Schnellansicht mit vorberechneten Werten.\n\n"
+                      "Die obere Zeile zeigt den Wert in Fremdwährung.\n\n"
+                      "Der untere Wert zeigt dir, wieviel dies in deiner Währung wäre", style: Styles.tutorialText)
+                ],
+              ),
+            ),
+          )
+        ]
+      )
+    );
+
+    _tutorialTargets.add(
+      TargetFocus(
+        identify: "Target 2",
+        keyTarget: widget.fabKey,
+          contents: [
+            ContentTarget(
+              align: AlignContent.top,
+              child: Container(
+                child: Column(
+                  children: <Widget>[
+                    Text("Du möchtest nicht durch die Liste scrollen, sondern schnell einen Wert suchen?"
+                        "Kein Problem! Versuchs mal hier.", style: Styles.tutorialText)
+                  ],
+                ),
+              ),
+            )
+          ]
+      )
+    );
+
+    _tutorialTargets.add(
+        TargetFocus(
+            identify: "Target 3",
+            keyTarget: widget.settingsKey,
+            contents: [
+              ContentTarget(
+                align: AlignContent.bottom,
+                child: Container(
+                  child: Column(
+                    children: <Widget>[
+                      Text("In den Einstellungen kannst du ganz einfach den Kurs oder "
+                          "sogar dir Farbe der App verändern!", style: Styles.tutorialText)
+                    ],
+                  ),
+                ),
+              )
+            ]
+        )
+    );
+  }
+
+  @override
+  void initState() {
+    _initTargets();
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if(!_settingsProvider.tutorialWatched){
+        Future.delayed(Duration(milliseconds: 300), () => _showTutorial());
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +139,8 @@ class _MoneyPageViewState extends State<MoneyPageView> {
     );
   }
 
+  bool tileTargetSet = false;
+
   Widget buildPage(int pagePosition, BoxConstraints constraints) {
     Size tileSize = Size(constraints.maxWidth / 5, constraints.maxHeight / 10);
 
@@ -42,9 +149,14 @@ class _MoneyPageViewState extends State<MoneyPageView> {
         int top = (columnPosition + 10 * rowPosition + (50 * pagePosition));
         double bottom = top / course;
 
+        var key = (columnPosition == 4 && !tileTargetSet) ? _tileKey : new GlobalKey();
+        if(columnPosition == 4 && !tileTargetSet)
+          tileTargetSet = true;
+
         return _Tile(
-          top: top.toString(),
-          bottom: bottom.toStringAsFixed(2),
+          key: key,
+          top: top.toString(), // fremdwährung
+          bottom: bottom.toStringAsFixed(2), // eigene Währung
           size: tileSize,
           color: columnPosition % 2 == 0 ? Colors.white : Colors.grey,
         );
@@ -78,7 +190,8 @@ class _Tile extends StatelessWidget {
       {@required this.top,
       @required this.bottom,
       @required this.size,
-      this.color = Colors.white});
+        Key key,
+      this.color = Colors.white}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

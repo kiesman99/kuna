@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 /// It will notify all it observers when something changed
 class CalculatorProvider with ChangeNotifier {
   // needed Provider
-  SharedPrefProvider sharedPrefProvider;
+  SettingsProvider sharedPrefProvider;
   PageProvider pageProvider;
 
   double get _course => sharedPrefProvider.course;

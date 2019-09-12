@@ -1,12 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class PageProvider with ChangeNotifier {
-  bool _gridView = true;
-
-  bool get gridView => _gridView;
+  ValueNotifier<bool> gridView = new ValueNotifier(true);
 
   void switchView() {
-    _gridView = !gridView;
+    gridView.value = !gridView.value;
     notifyListeners();
   }
 }

@@ -12,6 +12,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
+
+  GlobalKey _settingskey = new GlobalKey();
+  GlobalKey _fabKey = new GlobalKey();
+
   /// This is the controller which handles starting the different animations
   /// if the fab button was pressed
   static AnimationController _fabAnimationController;
@@ -40,7 +44,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   Future<bool> _willPopCallback() async{
-    if(Provider.of<PageProvider>(context).gridView)
+    if(Provider.of<PageProvider>(context).gridView.value)
       return true;
 
     Provider.of<PageProvider>(context).switchView();
@@ -50,14 +54,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    Provider.of<PageProvider>(context).addListener(() {
-      bool grid = Provider.of<PageProvider>(context).gridView;
-      if (!grid) {
-        _fabAnimationController.forward(from: 0.0);
-      } else {
-        _fabAnimationController.reverse(from: 1.0);
-      }
-    });
 
 
     return WillPopScope(
@@ -74,6 +70,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ),
           actions: <Widget>[
             IconButton(
+              key: _settingskey,
               icon: Icon(Icons.settings),
               onPressed: () {},
             )
@@ -86,13 +83,23 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               builder: (context, child) {
                 return Stack(
                   children: <Widget>[
-                    Opacity(
-                      opacity: _gridViewOpacity.value,
-                      child: MoneyPageView(pageController: pageController),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 600),
+                      child: ValueListenableBuilder(
+                        valueListenable: Provider.of<PageProvider>(context).gridView,
+                        builder: (context, gridview, child){
+                          if(gridview)
+                            return MoneyPageView(
+                              pageController: pageController,
+                              settingsKey: _settingskey,
+                              fabKey: _fabKey,
+                            );
+
+                          return CalculatorPage();
+                        },
+                      ),
                     ),
-                    Opacity(
-                        opacity: _calcViewOpacity.value, child: CalculatorPage()),
-                    CalcFabButton(animationController: _fabAnimationController)
+                    CalcFabButton(fabKey: _fabKey)
                   ],
                 );
               },

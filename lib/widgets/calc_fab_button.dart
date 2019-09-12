@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kuna/data/calculator_rows.dart';
 import 'package:kuna/provider/page_provider.dart';
+import 'package:kuna/provider/shared_pref_provider.dart';
 import 'package:kuna/widgets/calculator_pad.dart';
 import 'package:provider/provider.dart';
 
@@ -8,11 +9,9 @@ class CalcFabButton extends StatefulWidget {
   /// Size of the Fab Button that will be rendered
   static final Size fabSize = Size(60, 60);
 
-  /// The AnimationController that will handle expanding and shrinkig the
-  /// Fab Button
-  final AnimationController animationController;
+  final Key fabKey;
 
-  CalcFabButton({this.animationController});
+  CalcFabButton({this.fabKey});
 
   @override
   _CalcFabButtonState createState() => _CalcFabButtonState();
@@ -20,12 +19,24 @@ class CalcFabButton extends StatefulWidget {
 
 class _CalcFabButtonState extends State<CalcFabButton>
     with TickerProviderStateMixin {
-  AnimationController get controller => widget.animationController;
+  AnimationController _animationController;
 
   static Animation<double> _fabPositionAnimation, _fabRadiusAnimation;
   static Animation<Size> _fabSizeAnimation;
 
-  bool get _gridView => Provider.of<PageProvider>(context).gridView;
+  @override
+  void initState() {
+    _animationController = new AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<PageProvider>(context).gridView.addListener(() {
+        if(Provider.of<PageProvider>(context).gridView.value)
+          _animationController.reverse(from: 1.0);
+        else
+          _animationController.forward(from: 0.0);
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,14 +45,14 @@ class _CalcFabButtonState extends State<CalcFabButton>
         _fabSizeAnimation = SizeTween(
                 begin: CalcFabButton.fabSize,
                 end: Size(constraints.maxWidth, constraints.maxHeight / 2))
-            .animate(widget.animationController);
+            .animate(_animationController);
 
         _fabRadiusAnimation =
-            Tween(begin: 100.0, end: 0.0).animate(widget.animationController);
+            Tween(begin: 100.0, end: 0.0).animate(_animationController);
 
         _fabPositionAnimation = Tween(begin: 20.0, end: 0.0)
             .chain(CurveTween(curve: Curves.bounceIn))
-            .animate(widget.animationController);
+            .animate(_animationController);
 
         return Container(
             height: constraints.maxHeight,
@@ -49,7 +60,7 @@ class _CalcFabButtonState extends State<CalcFabButton>
             child: Stack(
               children: <Widget>[
                 AnimatedBuilder(
-                  animation: widget.animationController,
+                  animation: _animationController,
                   builder: (_, child) {
                     return Positioned(
                       bottom: _fabPositionAnimation.value,
@@ -62,13 +73,9 @@ class _CalcFabButtonState extends State<CalcFabButton>
                         child: InkWell(
                           borderRadius:
                               BorderRadius.circular(_fabRadiusAnimation.value),
-                          onTap: _gridView
-                              ? () {
-                                  Provider.of<PageProvider>(context)
-                                      .switchView();
-                                }
-                              : null,
+                          onTap: _fabTap,
                           child: Container(
+                              key: widget.fabKey,
                               height: _fabSizeAnimation.value.height,
                               width: _fabSizeAnimation.value.width,
                               decoration: BoxDecoration(
@@ -86,16 +93,24 @@ class _CalcFabButtonState extends State<CalcFabButton>
     );
   }
 
+  void _fabTap(){
+    if(Provider.of<PageProvider>(context).gridView.value){
+      Provider.of<PageProvider>(context)
+          .switchView();
+    }
+    return null;
+  }
+
   /// This function will return the content of
   /// the FAB button depending on which view is enabled and
   /// wether the FAB button is expanded or not
   Widget _getFabContent() {
     // Grid View is enabled
-    if (_gridView) return Icon(Icons.filter_9_plus, color: Colors.white);
+    if (Provider.of<PageProvider>(context).gridView.value) return Icon(Icons.filter_9_plus, color: Colors.white);
 
     // if gridview is not enabled and the fab button is fully expanded
     // return the actual calculator
-    if (widget.animationController.isCompleted) return CalculatorPad();
+    if (_animationController.isCompleted) return CalculatorPad();
 
     // otherwise return a empty Container
     return Container();

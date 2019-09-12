@@ -6,4 +6,6 @@ class Styles{
     fontSize: 36.0,
   );
 
+  static TextStyle tutorialText = new TextStyle(color: Colors.white);
+
 }

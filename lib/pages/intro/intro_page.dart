@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:hive/hive.dart';
 import 'package:kuna/pages/my_home_page.dart';
+import 'package:kuna/provider/shared_pref_provider.dart';
 import 'package:number_slide_animation/number_slide_animation.dart';
+import 'package:provider/provider.dart';
 
 import '../../styles.dart';
 
@@ -79,7 +81,7 @@ class _IntroPageState extends State<IntroPage> {
     _textEditingController = new TextEditingController();
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async{
-      await _infoModal();
+      Future.delayed(Duration(milliseconds: 100), () => _infoModal());
     });
 
     _textEditingController.addListener(() {
@@ -90,7 +92,6 @@ class _IntroPageState extends State<IntroPage> {
   }
 
   String _validateTextField(String value){
-    print("VALIDATE");
     if(value.isEmpty) {
       return "Bitte gebe einen Wechselkurs ein";
     }
@@ -170,7 +171,9 @@ class _IntroPageState extends State<IntroPage> {
 
   void _nextPage(){
     if(_formKey.currentState.validate()){
-      Hive.box('settings').put("course", num.tryParse(_textEditingController.text));
+      final SettingsProvider settingsProvider = Provider.of<SettingsProvider>(context);
+      settingsProvider.course = double.tryParse(_textEditingController.text);
+      settingsProvider.courseSet = true;
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MyHomePage()));
     }
   }
