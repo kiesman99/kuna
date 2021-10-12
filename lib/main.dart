@@ -41,9 +41,9 @@ class MyApp extends StatelessWidget {
     initProviders(context);
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(builder: (_) => _settingsProvider),
-        ChangeNotifierProvider(builder: (_) => _pageProvider),
-        ChangeNotifierProvider(builder: (_) => _calculatorProvider)
+        ChangeNotifierProvider<SettingsProvider>(create: (_) => _settingsProvider),
+        ChangeNotifierProvider<PageProvider>(create: (_) => _pageProvider),
+        ChangeNotifierProvider<CalculatorProvider>(create: (_) => _calculatorProvider)
       ],
       child: FutureBuilder(
         future: _openBoxes(),
@@ -53,9 +53,9 @@ class MyApp extends StatelessWidget {
               return _Error(error: snapshot.error.toString());
             }
 
-            return WatchBoxBuilder(
-              box: Hive.box("settings"),
-              builder: (context, box){
+            return ValueListenableBuilder(
+              valueListenable: Hive.box('settings').listenable(),
+              builder: (context, box, widget) {
                 return MaterialApp(
                   theme: ThemeData(
                     primaryColor: Color(_settingsProvider.primaryColor)

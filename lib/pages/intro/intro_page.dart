@@ -28,13 +28,7 @@ class _IntroPageState extends State<IntroPage> {
         return AlertDialog(
           title: Row(
             children: <Widget>[
-              Text("Info - "),
-              NumberSlideAnimation(
-                number: "213576",
-                textStyle: Theme.of(context).textTheme.title,
-                duration: Duration(seconds: 2),
-                curve: Curves.easeInCubic,
-              ),
+              Text("Info")
             ],
           ),
           content: SingleChildScrollView(
@@ -44,7 +38,7 @@ class _IntroPageState extends State<IntroPage> {
                 "Du kannst den Kurs jederzeit in den Einstellungen ändern."),
           ),
           actions: <Widget>[
-            FlatButton(
+            TextButton(
               child: Text("Okay!"),
               onPressed: () => Navigator.of(context).pop(),
             ),
@@ -62,11 +56,11 @@ class _IntroPageState extends State<IntroPage> {
           title: Text("Hilfe"),
           content: SingleChildScrollView(
             child: Text("Der Wechselkurs zeigt dir, wieviel Geld in Fremdwährung du für eine Einheit deiner Währung bekommst.\n\n"
-            "Wenn du beispielsweise für einen Euro (deine Währung) vier US-Dollar (Fremdwährung) bekommst, währe dein Wechselkurs: 4.\n\n"
+            "Wenn du beispielsweise für einen Euro (deine Währung) vier US-Dollar (Fremdwährung) bekommst, wäre dein Wechselkurs: 4.\n\n"
                 "Bekommst du für einen Euro (deine Währung ) 0,5 US-Dollar (Fremdwährung), wäre dein Wechselkurs: 0,5"),
           ),
           actions: <Widget>[
-            FlatButton(
+            TextButton(
               child: Text("Okay"),
               onPressed: () => Navigator.of(context).pop(),
             )
@@ -125,7 +119,6 @@ class _IntroPageState extends State<IntroPage> {
                       child: TextFormField(
                         decoration: InputDecoration(
                             icon: Icon(Icons.euro_symbol),
-                            hasFloatingPlaceholder: true,
                             labelText: "Wechselkurs",
                             border: OutlineInputBorder()
                         ),
@@ -138,7 +131,7 @@ class _IntroPageState extends State<IntroPage> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
-                        FlatButton(
+                        TextButton(
                           child: Text("Was ist der Wechselkurs?", style: TextStyle(color: Theme.of(context).primaryColor)),
                           onPressed: () => _helpDialog(),
                         )
@@ -171,7 +164,7 @@ class _IntroPageState extends State<IntroPage> {
 
   void _nextPage(){
     if(_formKey.currentState.validate()){
-      final SettingsProvider settingsProvider = Provider.of<SettingsProvider>(context);
+      final SettingsProvider settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
       settingsProvider.course = double.tryParse(_textEditingController.text);
       settingsProvider.courseSet = true;
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MyHomePage()));

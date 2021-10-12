@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kuna/data/calculator_rows.dart';
 import 'package:kuna/provider/page_provider.dart';
-import 'package:kuna/provider/shared_pref_provider.dart';
 import 'package:kuna/widgets/calculator_pad.dart';
 import 'package:provider/provider.dart';
 
@@ -29,8 +27,9 @@ class _CalcFabButtonState extends State<CalcFabButton>
     _animationController = new AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<PageProvider>(context).gridView.addListener(() {
-        if(Provider.of<PageProvider>(context).gridView.value)
+      var pageProvider = Provider.of<PageProvider>(context, listen: false);
+      pageProvider.gridView.addListener(() {
+        if(pageProvider.gridView.value)
           _animationController.reverse(from: 1.0);
         else
           _animationController.forward(from: 0.0);
@@ -94,9 +93,9 @@ class _CalcFabButtonState extends State<CalcFabButton>
   }
 
   void _fabTap(){
-    if(Provider.of<PageProvider>(context).gridView.value){
-      Provider.of<PageProvider>(context)
-          .switchView();
+    var pageProvider = Provider.of<PageProvider>(context, listen: false);
+    if(pageProvider.gridView.value){
+      pageProvider.switchView();
     }
     return null;
   }
@@ -106,7 +105,7 @@ class _CalcFabButtonState extends State<CalcFabButton>
   /// wether the FAB button is expanded or not
   Widget _getFabContent() {
     // Grid View is enabled
-    if (Provider.of<PageProvider>(context).gridView.value) return Icon(Icons.filter_9_plus, color: Colors.white);
+    if (Provider.of<PageProvider>(context, listen: false).gridView.value) return Icon(Icons.filter_9_plus, color: Colors.white);
 
     // if gridview is not enabled and the fab button is fully expanded
     // return the actual calculator

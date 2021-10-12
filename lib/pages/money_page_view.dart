@@ -28,11 +28,11 @@ class _MoneyPageViewState extends State<MoneyPageView> {
 
   int itemsToShow = 2000;
 
-  SettingsProvider get _settingsProvider => Provider.of<SettingsProvider>(context);
+  SettingsProvider get _settingsProvider => Provider.of<SettingsProvider>(context, listen: false);
 
   double get course => _settingsProvider.course;
 
-  List<TargetFocus> _tutorialTargets = List();
+  List<TargetFocus> _tutorialTargets = [];
 
   void _showTutorial() {
     TutorialCoachMark(
@@ -40,8 +40,8 @@ class _MoneyPageViewState extends State<MoneyPageView> {
       textSkip: "Überspringen",
       targets: _tutorialTargets,
       colorShadow: Color(_settingsProvider.primaryColor),
-      finish: () => _settingsProvider.tutorialWatched = true,
-      clickSkip: () => _settingsProvider.tutorialWatched = true,
+      onFinish: () => _settingsProvider.tutorialWatched = true,
+      onSkip: () => _settingsProvider.tutorialWatched = true,
       alignSkip: Alignment.bottomLeft
     )..show();
   }
@@ -53,8 +53,8 @@ class _MoneyPageViewState extends State<MoneyPageView> {
         identify: "Target 1",
         keyTarget: _tileKey,
         contents: [
-          ContentTarget(
-            align: AlignContent.bottom,
+          TargetContent(
+            align: ContentAlign.bottom,
             child: Container(
               child: Column(
                 children: <Widget>[
@@ -74,8 +74,8 @@ class _MoneyPageViewState extends State<MoneyPageView> {
         identify: "Target 2",
         keyTarget: widget.fabKey,
           contents: [
-            ContentTarget(
-              align: AlignContent.top,
+            TargetContent(
+              align: ContentAlign.top,
               child: Container(
                 child: Column(
                   children: <Widget>[
@@ -94,8 +94,8 @@ class _MoneyPageViewState extends State<MoneyPageView> {
             identify: "Target 3",
             keyTarget: widget.settingsKey,
             contents: [
-              ContentTarget(
-                align: AlignContent.bottom,
+              TargetContent(
+                align: ContentAlign.bottom,
                 child: Container(
                   child: Column(
                     children: <Widget>[
